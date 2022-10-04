@@ -3,8 +3,11 @@ window.addEventListener('load', () => {
   /*
    * Canvas Setup
    */
+  window.debug = false;
+
   const canvas = document.querySelector("#canvas1");
   const ctx = canvas.getContext('2d');
+
   canvas.width = 500;
   canvas.height = 500;
 
@@ -37,7 +40,7 @@ class InputHandler {
     this.game = game;
 
     window.addEventListener('keydown', (e) => {
-      if(game.debug) console.dir(game)
+      if(window.debug) console.dir(game)
 
       switch(e.key) {
         case 'ArrowUp':
@@ -142,6 +145,8 @@ class Enemy {
     this.x               = this.game.width;
     this.speedX          = Math.random() * -1.5 - 0.5;
     this.markForDeletion = false;
+    this.lives           = 5;
+    this.score           = this.lives;
   }
 
   update() {
@@ -152,6 +157,10 @@ class Enemy {
   draw(context) {
     context.fillStyle = 'red';
     context.fillRect(this.x, this.y, this.width, this.height);
+    if(window.debug) {
+      context.font = '20px Helvetica';
+      context.fillText(this.lives, this.x, this.y);
+    }
   }
 }
 
@@ -178,17 +187,52 @@ class Backgound {
 class UI {
   constructor(game) {
     this.game = game;
-    this.fontSize = 25;
+    this.fontSize = 20;
     this.fontFamily = 'Helvetica';
-    this.color = 'yellow';
+    this.color = 'red';
   }
 
   draw(context) {
+    //
+    context.save();
+
+    context.font = this.fontSize + 'px ' + this.fontFamily;
+
     // Ammo
     context.fillStyle = this.color;
     for(let i = 0; i < this.game.ammo; i++) {
       context.fillRect(10 +(5 * i), 10, 3, 20);
     }
+
+    // Score
+    context.fillText(`Score: ${this.game.score}`, this.game.width - 100, 30);
+
+    // Game Over Screen
+    if(this.game.gameOver) {
+      context.textAlign = 'center';
+      let messageLine1 = 'Game Over!';
+      let messageLine2 = '';
+
+      if(this.game.score >= this.game.winningScore) {
+        messageLine2 += 'You win!!!';
+      } else {
+        messageLine2 += 'You Lose!';
+      }
+
+      context.fontSize = 50
+      context.fillText(messageLine1, this.game.width / 2, this.game.height / 2 - 50);
+
+      context.fontSize = 20
+      context.fillText(messageLine2, this.game.width / 2, this.game.height / 2);
+    }
+
+    // Timer
+    const formattedTime = (this.game.gameTime * 0.001).toFixed(1)
+    context.textAlign = 'center';
+    context.fillText(`Timer ${formattedTime}s`, this.game.width / 2, this.game.height - 20)
+
+    //
+    context.restore();
   }
 }
 
@@ -198,6 +242,10 @@ class Game {
     this.height   = height;
     this.keys     = [];
     this.gameOver = false;
+    this.gameTime = 0;
+
+    this.score        = 0;
+    this.winningScore = 10;
 
     this.enemies       = [];
     this.enemyTimer    = 0;
@@ -211,12 +259,13 @@ class Game {
     this.player = new Player(this);
     this.input  = new InputHandler(this);
     this.ui     = new UI(this);
-
-    this.debug = true;
   }
 
   update(deltaTime) {
-    // PLayer
+    // Timer
+    this.gameTime += deltaTime;
+
+    // Player
     this.player.update();
 
     // Ammo
@@ -230,6 +279,23 @@ class Game {
     // Enemies
     this.enemies.forEach(enemy => {
       enemy.update();
+
+      if(this.checkCollission(this.player, enemy)) {
+        enemy.markForDeletion = true;
+      }
+
+      this.player.projetiles.forEach(projetile => {
+        if(this.checkCollission(projetile, enemy)) {
+          enemy.lives--;
+          projetile.markForDeletion = true;
+
+          if(enemy.lives <= 0) {
+            enemy.markForDeletion = true;
+            if(!this.gameOver) this.score += enemy.score;
+            if(this.score > this.winningScore) this.gameOver = true;
+          }
+        }
+      })
     })
 
     this.enemies = this.enemies.filter(e => !e.markForDeletion);
@@ -255,4 +321,15 @@ class Game {
   addEnemy() {
     this.enemies.push(new Enemy1(this));
   }
+
+  checkCollission(rect1, rect2) {
+    return(
+      rect1.x < rect2.x + rect2.width &&
+      rect1.x + rect1.width > rect2.x &&
+      rect1.y < rect2.y + rect2.height &&
+      rect1.height + rect1.y > rect2.y
+    )
+  }
+
+  for
 }
