@@ -158,7 +158,7 @@ class Enemy {
     context.fillStyle = 'red';
     context.fillRect(this.x, this.y, this.width, this.height);
     if(window.debug) {
-      context.font = '20px Helvetica';
+      context.font = '20px Arial';
       context.fillText(this.lives, this.x, this.y);
     }
   }
@@ -188,7 +188,7 @@ class UI {
   constructor(game) {
     this.game = game;
     this.fontSize = 20;
-    this.fontFamily = 'Helvetica';
+    this.fontFamily = 'FiveByFive';
     this.color = 'red';
   }
 
@@ -205,7 +205,7 @@ class UI {
     }
 
     // Score
-    context.fillText(`Score: ${this.game.score}`, this.game.width - 100, 30);
+    context.fillText(`Score: ${this.game.score}`, this.game.width - 140, 30);
 
     // Game Over Screen
     if(this.game.gameOver) {
@@ -330,6 +330,4 @@ class Game {
       rect1.height + rect1.y > rect2.y
     )
   }
-
-  for
 }
