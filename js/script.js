@@ -3,7 +3,7 @@ window.addEventListener('load', () => {
   /*
    * Canvas Setup
    */
-  window.debug = false;
+  window.debug = true;
 
   const canvas = document.querySelector("#canvas1");
   const ctx = canvas.getContext('2d');
@@ -40,13 +40,13 @@ class InputHandler {
     this.game = game;
 
     window.addEventListener('keydown', (e) => {
-      if(window.debug) console.dir(game)
+      if(window.debug) console.log(game, e)
 
       switch(e.key) {
-        case 'ArrowUp':
+        case 'ArrowLeft':
           if(this.game.keys.indexOf(e.key) === -1) this.game.keys.push(e.key);
           break;
-        case 'ArrowDown':
+        case 'ArrowRight':
           if(this.game.keys.indexOf(e.key) === -1) this.game.keys.push(e.key);
           break;
         case ' ':
@@ -69,17 +69,16 @@ class Projectile {
     this.x    = x;
     this.y    = y;
 
-    this.width  = 10;
-    this.height = 3;
+    this.width  = 3;
+    this.height = 10;
     this.speed  = 3;
     this.markForDeletion = false;
   }
 
   update() {
-    this.x += this.speed;
+    this.y -= this.speed;
 
-    if(this.x > this.game.width * 0.8)
-      this.markForDeletion = true;
+    if(this.y < 0) this.markForDeletion = true;
   }
 
   draw(context){
@@ -99,20 +98,22 @@ class Player {
 
     this.width  = 26;
     this.height = 21;
-    this.x      = 10;
-    this.y      = 40;
+    this.x      = (game.width / 2) - (this.width / 2);
+    this.y      = game.height - 75;
 
-    this.speedY   = 0;
+    // this.speedY   = 0;
+    this.speedX   = 0;
     this.maxSpeed = 4;
     this.projetiles = [];
   }
 
   update() {
-    if(this.game.keys.includes('ArrowUp')) this.speedY = -this.maxSpeed;
-    else if (this.game.keys.includes('ArrowDown')) this.speedY = this.maxSpeed;
-    else this.speedY = 0;
+    if(this.game.keys.includes('ArrowLeft')) this.speedX = -this.maxSpeed;
+    else if (this.game.keys.includes('ArrowRight')) this.speedX = this.maxSpeed;
+    else this.speedX = 0;
 
-    this.y += this.speedY;
+    // this.y += this.speedY;
+    this.x += this.speedX;
 
     // handle projetiles
     this.projetiles.forEach(p => {
@@ -142,16 +143,18 @@ class Player {
 class Enemy {
   constructor(game) {
     this.game            = game;
-    this.x               = this.game.width;
-    this.speedX          = Math.random() * -1.5 - 0.5;
+    // this.x               = this.game.width;
+    this.y               = 0;
+    // this.speedX          = Math.random() * -1.5 - 0.5;
+    this.speedY          = Math.random() * -1.5 - 0.5;
     this.markForDeletion = false;
     this.lives           = 5;
     this.score           = this.lives;
   }
 
   update() {
-    this.x += this.speedX;
-    if(this.x + this.game.width < 0) this.markForDeletion = true;
+    this.y -= this.speedY;
+    if(this.y > this.game.height) this.markForDeletion = true;
   }
 
   draw(context) {
@@ -170,7 +173,7 @@ class Enemy1 extends Enemy {
 
     this.width  = 30;
     this.height = 30;
-    this.y      = Math.random() * (this.game.height * 0.9 - this.height);
+    this.x      = Math.random() * (this.game.height * 0.9 - this.height);
   }
 }
 
