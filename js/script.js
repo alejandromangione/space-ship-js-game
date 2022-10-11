@@ -49,6 +49,9 @@ class InputHandler {
         case 'ArrowRight':
           if(this.game.keys.indexOf(e.key) === -1) this.game.keys.push(e.key);
           break;
+        case 'd':
+           window.debug = !window.debug;
+          break;
         case ' ':
           this.game.player.shootTop();
           break;
@@ -175,22 +178,46 @@ class Enemy {
     // this.speedX          = Math.random() * -1.5 - 0.5;
     this.speedY          = Math.random() * -1.5 - 0.5;
     this.markForDeletion = false;
-    this.lives           = 5;
+    this.lives           = 2;
     this.score           = this.lives;
+
+    // Sprite Animation
+    this.frameX      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4];
+    this.frameY      = 0;
+    this.indexFrameX = 0;
   }
 
   update() {
-    this.y -= this.speedY;
+    this.y -= this.speedY - this.game.speed;
     if(this.y > this.game.height) this.markForDeletion = true;
+
+    // Sprite Animation
+    if(this.indexFrameX < this.frameX.length) {
+      this.indexFrameX++;
+    } else {
+      this.indexFrameX = 0;
+    }
   }
 
   draw(context) {
-    context.fillStyle = 'red';
-    context.fillRect(this.x, this.y, this.width, this.height);
     if(window.debug) {
+      context.fillStyle = 'red';
+      context.fillRect(this.x, this.y, this.width, this.height);
       context.font = '20px Arial';
       context.fillText(this.lives, this.x, this.y);
     }
+
+    context.drawImage(
+      this.image,
+      this.frameX[this.indexFrameX] * this.width,
+      this.frameY * this.height,
+      this.width,
+      this.height,
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    )
   }
 }
 
@@ -201,6 +228,7 @@ class Enemy1 extends Enemy {
     this.width  = 30;
     this.height = 30;
     this.x      = Math.random() * (this.game.height * 0.9 - this.height);
+    this.image  = document.querySelector("#enemy1");
   }
 }
 
@@ -256,7 +284,7 @@ class UI {
     this.game = game;
     this.fontSize = 20;
     this.fontFamily = 'FiveByFive';
-    this.color = 'red';
+    this.color = 'white';
   }
 
   draw(context) {
@@ -296,7 +324,7 @@ class UI {
     // Timer
     const formattedTime = (this.game.gameTime * 0.001).toFixed(1)
     context.textAlign = 'center';
-    context.fillText(`Timer ${formattedTime}s`, this.game.width / 2, this.game.height - 20)
+    context.fillText(`Timer ${formattedTime}s`, this.game.width / 2, this.game.height - 10)
 
     //
     context.restore();
@@ -312,7 +340,7 @@ class Game {
     this.gameTime = 0;
 
     this.score        = 0;
-    this.winningScore = 1000;
+    this.winningScore = 50;
     this.speed = 1;
 
     this.enemies       = [];
