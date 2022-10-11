@@ -3,7 +3,7 @@ window.addEventListener('load', () => {
   /*
    * Canvas Setup
    */
-  window.debug = true;
+  window.debug = false;
 
   const canvas = document.querySelector("#canvas1");
   const ctx = canvas.getContext('2d');
@@ -96,21 +96,34 @@ class Player {
   constructor(game) {
     this.game = game;
 
-    this.width  = 26;
-    this.height = 21;
+    this.width  = 36;
+    this.height = 36;
     this.x      = (game.width / 2) - (this.width / 2);
     this.y      = game.height - 75;
+
+    this.frameX = 1;
+    this.frameY = 0;
 
     // this.speedY   = 0;
     this.speedX   = 0;
     this.maxSpeed = 4;
     this.projetiles = [];
+    this.image = document.querySelector("#player");
   }
 
   update() {
-    if(this.game.keys.includes('ArrowLeft')) this.speedX = -this.maxSpeed;
-    else if (this.game.keys.includes('ArrowRight')) this.speedX = this.maxSpeed;
-    else this.speedX = 0;
+    if(this.game.keys.includes('ArrowLeft')) {
+      this.speedX = -this.maxSpeed
+      this.frameX = 0;
+    }
+    else if (this.game.keys.includes('ArrowRight')) {
+      this.speedX = this.maxSpeed;
+      this.frameX = 2;
+    }
+    else {
+      this.speedX = 0;
+      this.frameX = 1;
+    }
 
     // this.y += this.speedY;
     this.x += this.speedX;
@@ -124,8 +137,22 @@ class Player {
   }
 
   draw(context) {
-    context.fillStyle = 'black';
-    context.fillRect(this.x, this.y, this.width, this.height);
+    if(window.debug) {
+      context.fillStyle = 'yellow';
+      context.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    context.drawImage(
+      this.image,
+      this.frameX * this.width,
+      this.frameY * this.height,
+      this.width,
+      this.height,
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    )
 
     // handle projetiles
     this.projetiles.forEach(p => {
@@ -178,12 +205,49 @@ class Enemy1 extends Enemy {
 }
 
 class Layer {
-  constructor() {
+  constructor(game, image, speedModifier) {
+    this.game = game;
+    this.image = image;
+    this.speedModifier = speedModifier;
+    this.width = 600;
+    this.height = 1200;
+    this.x = 0;
+    this.y = game.height - this.height;
   }
+
+  update() {
+    if(this.y >= this.game.height) this.y = this.game.height - this.height;
+    else this.y += this.game.speed * this.speedModifier;
+  }
+
+  draw(context) {
+    context.drawImage(this.image, this.x, this.y);
+    context.drawImage(this.image, this.x, this.y - this.height);
+  }
+
 }
 
 class Backgound {
-  constructor() {
+  constructor(game) {
+    this.game = game;
+
+    this.image1 = document.querySelector('#layer1');
+    this.layer1 = new Layer(this.game, this.image1, 0.5);
+
+    this.image2 = document.querySelector('#layer2');
+    this.layer2 = new Layer(this.game, this.image2, 0.2);
+
+    this.layers = [
+      this.layer1
+    ];
+  }
+
+  update() {
+    this.layers.forEach(layer => layer.update())
+  }
+
+  draw(context) {
+    this.layers.forEach(layer => layer.draw(context));
   }
 }
 
@@ -248,7 +312,8 @@ class Game {
     this.gameTime = 0;
 
     this.score        = 0;
-    this.winningScore = 10;
+    this.winningScore = 1000;
+    this.speed = 1;
 
     this.enemies       = [];
     this.enemyTimer    = 0;
@@ -259,6 +324,7 @@ class Game {
     this.ammoTimer = 0;
     this.ammoInterval = 500; // 0.5 sec
 
+    this.backgound = new Backgound(this);
     this.player = new Player(this);
     this.input  = new InputHandler(this);
     this.ui     = new UI(this);
@@ -299,6 +365,10 @@ class Game {
           }
         }
       })
+
+      // Bg
+      this.backgound.update();
+      this.backgound.layer2.update();
     })
 
     this.enemies = this.enemies.filter(e => !e.markForDeletion);
@@ -312,13 +382,22 @@ class Game {
   }
 
   draw(context) {
+    // Bg [Back]
+    this.backgound.draw(context);
+
+    // Player
     this.player.draw(context);
 
+    // UI
     this.ui.draw(context);
 
+    // Enemies
     this.enemies.forEach(enemy => {
       enemy.draw(context);
     })
+
+    // Bg [Front]
+    this.backgound.layer2.draw(context);
   }
 
   addEnemy() {
