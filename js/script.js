@@ -72,10 +72,11 @@ class Projectile {
     this.x    = x;
     this.y    = y;
 
-    this.width  = 3;
-    this.height = 10;
-    this.speed  = 3;
+    this.width  = 16;
+    this.height = 16;
+    this.speed  = 4;
     this.markForDeletion = false;
+    this.image = document.querySelector('#projectile');
   }
 
   update() {
@@ -84,9 +85,10 @@ class Projectile {
     if(this.y < 0) this.markForDeletion = true;
   }
 
-  draw(context){
-    context.fillStyle = 'yellow';
-    context.fillRect(this.x, this.y, this.width, this.height);
+  draw(context) {
+    context.drawImage(this.image, this.x, this.y);
+    // context.fillStyle = 'yellow';
+    // context.fillRect(this.x, this.y, this.width, this.height);
   }
 }
 
@@ -115,11 +117,14 @@ class Player {
   }
 
   update() {
-    if(this.game.keys.includes('ArrowLeft')) {
+    if(
+      this.game.keys.includes('ArrowLeft') && this.x > 0) {
       this.speedX = -this.maxSpeed
       this.frameX = 0;
     }
-    else if (this.game.keys.includes('ArrowRight')) {
+    else if (
+      this.game.keys.includes('ArrowRight') && this.x < (this.game.width - this.width)
+    ) {
       this.speedX = this.maxSpeed;
       this.frameX = 2;
     }
